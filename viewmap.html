@@ -1,0 +1,35 @@
+<!DOCTYPE html>
+<html>
+	<head>
+		<title>Fargo PoI Suggestion Submission</title>
+		<meta name="viewport" content="initial-scale=1.0">
+		<meta charset="utf-8">
+		<style>
+			#map {
+				height: 100%;
+			}
+			html, body {
+				height: 100%;
+				margin: 0;
+				padding: 0;
+			}
+		</style>
+		<!-- <script src = "https://maps.googleapis.com/maps/api/js"></script> -->
+		
+		
+	</head>
+	<body>
+		<div id="map"></div>
+		<script>
+			var map;
+			function initMap() {
+				var map = new google.maps.Map(document.getElementById('map'), {
+					center: {lat: 46.8772, lng: -96.7898},
+					zoom: 13
+				});
+			}
+			<!-- google.maps.event.addDomListener(window, 'load', initMap); -->
+		</script>
+		<script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyCl9gwc4vAJyKFPKfKpJpu_-C4GG02SFSM&callback=initMap" async defer></script>
+	</body>
+</html>
