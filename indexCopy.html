@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<title>Fargo Stop Task Maps</title>
+
+	<meta charset="utf-8" />
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+	<link rel="shortcut icon" type="image/x-icon" href="docs/images/favicon.ico" />
+
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.5.1/dist/leaflet.css" integrity="sha512-xwE/Az9zrjBIphAcBb3F6JVqxf46+CDLwfLMHloNu6KEQCAWi6HcDUbeOfBIptF7tcCzusKFjFw2yuvEpDL9wQ==" crossorigin=""/>
+    <script src="https://unpkg.com/leaflet@1.5.1/dist/leaflet.js" integrity="sha512-GffPMF3RvMeYyc1LWMHtK8EbPv0iNZ8/oTtHPx9/cc2ILxQ+u905qIwdpULaqDkyBKgOaB57QTMg7ztg8Jm2Og==" crossorigin=""></script>
+
+
+
+</head>
+<body>
+
+
+<div id="mapid" style="width: 1200px; height: 800px;"></div>
+<script>
+  //=======================
+  // now in query.js
+	//=======================
+	// [REDACTED]
+
+
+
+
+
+
+	var unparsedQuery = "";
+
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+			//console.log(this.responseText);
+      unparsedQuery += this.responseText;
+    }
+  };
+  xmlhttp.open("GET", "get_tasks.php", false);
+  xmlhttp.send();
+
+  //console.log(unparsedQuery);
+  var parseAnd = unparsedQuery.split("&");
+	//console.log(parseAnd);
+	var parsedQuery = [];
+	for (i = 0; i < parseAnd.length; i++) {
+		parsedQuery.push(parseAnd[i].split(","));
+		//console.log(parsedQuery);
+	}
+	var queriedobjs = [];
+  for (i = 0; i < parsedQuery.length - 1; i++) {
+		var taskObj = {
+			name:parsedQuery[i][0],
+			lat:parsedQuery[i][1],
+			lng:parsedQuery[i][2],
+			task:parsedQuery[i][3],
+			rewardType:parsedQuery[i][4],
+			rewardAmount:parsedQuery[i][5],
+			encounterNum:parsedQuery[i][6]
+		};
+		//console.log(taskObj);
+		queriedobjs.push(taskObj);
+	}
+
+  var xmlhttp = new XMLHttpRequest();
+  xmlhttp.open("GET", "get_tasks.php", true);
+  //var phpdata = [];
+  var phpdata = xmlhttp.send();
+  //console.log(phpdata);
+
+
+	// create map and populate with pins
+	var mymap = L.map('mapid').setView([46.876078, -96.790481], 15);
+	
+	//============================
+	// ICON INITIALIZATION
+	//============================
+	var StopIcon = L.Icon.extend({
+		options: {
+			iconSize:	[70,70]
+		}
+	});
+	var ItemIcon = L.Icon.extend({
+		options: {
+			iconSize: [40,40]
+		}
+	})
+	var stardustIcon = new ItemIcon({iconUrl: 'icons/stardust.png'});
+	var razzIcon = new ItemIcon({iconUrl: 'icons/razz.png'});
+	var razzIcon3 = new ItemIcon({iconUrl: 'icons/razz3.png'});
+	var razzIcon6 = new ItemIcon({iconUrl: 'icons/razz6.png'});
+	var pinapIcon = new ItemIcon({iconUrl: 'icons/pinap.png'});
+	var pinapIcon1 = new ItemIcon({iconUrl: 'icons/pinap1.png'});
+	var pinapIcon2 = new ItemIcon({iconUrl: 'icons/pinap2.png'});
+	var nanabIcon = new ItemIcon({iconUrl: 'icons/nanab.png'});
+	var nanabIcon5 = new ItemIcon({iconUrl: 'icons/nanab5.png'});
+	var nanabIcon10 = new ItemIcon({iconUrl: 'icons/nanab10.png'});
+	var goldenIcon = new ItemIcon({iconUrl: 'icons/golden.png'});
+	var silverIcon = new ItemIcon({iconUrl: 'icons/silver.png'});
+	var silverIcon5 = new ItemIcon({iconUrl: 'icons/silver5.png'});
+	var sinnohIcon = new ItemIcon({iconUrl: 'icons/sinnoh.png'});
+	var rareIcon = new ItemIcon({iconUrl: 'icons/rare.png'});
+	var rareIcon1 = new ItemIcon({iconUrl: 'icons/rare1.png'});
+	var rareIcon3 = new ItemIcon({iconUrl: 'icons/rare3.png'});
+	var pokeballIcon = new ItemIcon({iconUrl: 'icons/pokeball.png'});
+	var greatIcon = new ItemIcon({iconUrl: 'icons/great.png'});
+	var ultraIcon = new ItemIcon({iconUrl: 'icons/ultra.png'});
+	var reviveIcon = new ItemIcon({iconUrl: 'icons/revive.png'});
+	var maxrevIcon = new ItemIcon({iconUrl: 'icons/maxrev.png'});
+	var potionIcon = new ItemIcon({iconUrl: 'icons/potion.png'});
+	var spotionIcon = new ItemIcon({iconUrl: 'icons/spotion.png'});
+	var hpotionIcon = new ItemIcon({iconUrl: 'icons/hpotion.png'});
+	var mpotionIcon = new ItemIcon({iconUrl: 'icons/mpotion.png'});
+	
+	// Pokemon Encounter icons (some are custom multiple outcome icons and alolans)
+	var encounterIcons = [];
+	for (i = 0; i < 669; i++) {
+		var encIcon = 'icons/' + i.toString() + '.png'
+		encounterIcons.push(new StopIcon({iconUrl: encIcon}));
+	}
+	//===========================
+	
+	// Work in Progress: Filter options
+	var stardust_array = [L.marker([46.876078, -96.790481], {icon: stardustIcon}),L.marker([46.876206, -96.789828], {icon: stardustIcon}),L.marker([46.877074, -96.789147], {icon: stardustIcon})];
+	var stardust_flag = 1;
+	var razz_array = [];
+	var razz_flag = 1;
+	var pinap_array = [];
+	var pinap_flag = 1;
+	var silver_array = [];
+	var silver_flag = 1;
+	var golden_array = [];
+	var golden_flag = 1;
+	var encounter_array = [];
+	var encounter_flag = 1;
+	var task_array = [];
+
+	 L.tileLayer('https://api.mapbox.com/styles/v1/{id}/tiles/{z}/{x}/{y}?access_token={accessToken}', {
+    attribution: 'Map data &copy; <a href="https://www.openstreetmap.org/">OpenStreetMap</a> contributors, <a href="https://creativecommons.org/licenses/by-sa/2.0/">CC-BY-SA</a>, Imagery © <a href="https://www.mapbox.com/">Mapbox</a>',
+    maxZoom: 18,
+    id: 'mapbox/streets-v11',
+    accessToken: '[REDACTED]'
+   }).addTo(mymap);
+
+	// Using pulled data to populate map with pins
+	for (i = 0; i < queriedobjs.length; i++){
+		if (queriedobjs[i].rewardType == 0){
+
+		}
+		else if (queriedobjs[i].rewardType == 1){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: encounterIcons[queriedobjs[i].encounterNum]}).addTo(mymap).bindPopup("<h3>"+queriedobjs[i].name+"</h3>"+queriedobjs[i].task);
+		}
+		else if (queriedobjs[i].rewardType == 2){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: stardustIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 3){
+			if(queriedobjs[i].rewardAmount == 5){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: silverIcon5}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: silverIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 4){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: pokeballIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 5){
+			if(queriedobjs[i].rewardAmount == 1){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: pinapIcon1}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else if(queriedobjs[i].rewardAmount == 2){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: pinapIcon2}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: pinapIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 6){
+			if(queriedobjs[i].rewardAmount == 3) {
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: razzIcon3}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else if(queriedobjs[i].rewardAmount == 6){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: razzIcon6}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: razzIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 7){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: goldenIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 8){
+			if(queriedobjs[i].rewardAmount == 5){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: nanabIcon5}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else if (queriedobjs[i].rewardAmount == 10){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: nanabIcon10}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: nanabIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 9){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: sinnohIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 10){
+			if(queriedobjs[i].rewardAmount == 3){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: rareIcon3}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else if(queriedobjs[i].rewardAmount == 1){
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: rareIcon1}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+			}
+			else
+				L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: rareIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 11){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: greatIcon}).addTo(mymap).bindPopup(queriedobjs[i].name+"\n"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 12){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: ultraIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 13){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: reviveIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 14){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: maxrevIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 15){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: potionIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 16){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: spotionIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 17){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: hpotionIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else if (queriedobjs[i].rewardType == 18){
+			L.marker([queriedobjs[i].lat,queriedobjs[i].lng], {icon: mpotionIcon}).addTo(mymap).bindPopup("<h4>"+queriedobjs[i].name+"</h4>"+queriedobjs[i].task+" x"+queriedobjs[i].rewardAmount);
+		}
+		else {}
+	}
+	var popup = L.popup();
+
+	
+
+</script>
+
+
+
+</body>
+</html>
